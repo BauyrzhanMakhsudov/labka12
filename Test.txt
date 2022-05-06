@@ -1,0 +1,105 @@
+package Assiments;
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.io.File;
+
+public class Week7_Ex16_24 extends Application {
+    private final double W = 600. , H = 400.;
+
+    public static String getTimeString(double millis) {
+        millis /= 1000;
+        String s = formatTime(millis % 60);
+        millis /= 60;
+        String m = formatTime(millis % 60);
+        millis /= 60;
+        String h = formatTime(millis % 24);
+        return h + ":" + m + ":" + s;
+    }
+
+    public static String formatTime(double time) {
+        int t = (int)time;
+        if (t > 9) { return String.valueOf(t); }
+        return "0" + t;
+    }
+
+
+    @Override
+    public void start(Stage primaryStage) {
+        Media media = new Media(new File("C:\\Users\\bauka\\IdeaProjects\\Project2\\src\\main\\java\\Assiments\\videoplayback (2).mp4").toURI().toString());
+        MediaPlayer mediaPlayer = new MediaPlayer(media);
+        MediaView mediaView = new MediaView(mediaPlayer);
+        mediaView.setFitWidth(600);
+        mediaView.setFitHeight(400);
+
+        Button playButton = new Button(">");
+        playButton.setOnAction(e->{
+            if(playButton.getText().equals(">")){
+                mediaPlayer.play();
+                playButton.setText("||");
+            }else{
+                mediaPlayer.pause();
+                playButton.setText(">");
+            }
+        });
+        Slider volume = new Slider();
+        volume.setPrefWidth(150);
+        volume.setMaxWidth(Region.USE_PREF_SIZE);
+        volume.setMinWidth(30);
+        volume.setValue(50);
+        mediaPlayer.volumeProperty().bind(volume.valueProperty().divide(100));
+
+        Slider time = new Slider();
+        time.setMinWidth(30);
+        time.setPrefWidth(150);
+        time.setMaxWidth(Region.USE_PREF_SIZE);
+        time.setMin(0);
+
+        Label lbTime = new Label();
+
+        mediaPlayer.currentTimeProperty().addListener(e->{
+            if(!time.isValueChanging()) {
+                double total = mediaPlayer.getTotalDuration().toMillis();
+                double current = mediaPlayer.getCurrentTime().toMillis();
+                time.setMax(total);
+                time.setValue(current);
+                lbTime.setText(getTimeString(current) + "/" + getTimeString(total));
+            }
+        });
+
+        time.valueProperty().addListener(e->{
+            if(time.isValueChanging()) {
+                mediaPlayer.seek(new Duration(time.getValue()));
+            }
+        });
+        HBox hBox = new HBox(10);
+        hBox.setAlignment(Pos.CENTER);
+        hBox.setPadding(new Insets(20));
+        hBox.getChildren().addAll(playButton, new Label("Time"), time, lbTime,
+                new Label("Volume"), volume);
+
+        BorderPane borderPane = new BorderPane();
+        borderPane.setCenter(mediaView);
+        borderPane.setBottom(hBox);
+
+        primaryStage.setScene(new Scene(borderPane, W, H));
+        primaryStage.setTitle("Exercise 16.24");
+        primaryStage.show();
+
+    }
+}
+
